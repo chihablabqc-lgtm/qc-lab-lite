@@ -3,7 +3,7 @@
 Application **offline** de gestion des échantillons et rapports qualité (ISO/CEI 17025).
 
 ## 🚀 Démo
-➡️ [Voir en ligne](https://<ton-user>.github.io/qc-lab-lite/)
+➡️ [Voir en ligne](<https://chihablabqc-lgtm.github.io/qc-lab-lite/>.github.io/qc-lab-lite/)
 
 ## ✨ Fonctionnalités
 - Gestion des **échantillons** avec filtres et priorités
