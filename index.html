@@ -4,12 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>QC Lab Lite v2.3 — Pages</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>QC Lab Lite v2.3 FULL</h1>
-  <p>Version cumulative avec gestion des clients, produits, rapports, export PDF/Word, sauvegarde/restauration.</p>
-  <script>
-    console.log("QC Lab Lite v2.3 FULL chargé avec succès !");
-  </script>
+  <header>
+    <h1>QC Lab Lite v2.3 FULL</h1>
+    <nav>
+      <button onclick="newSample()">+ Nouvel échantillon</button>
+      <button onclick="exportPDF()">Exporter PDF</button>
+      <button onclick="exportWord()">Exporter Word</button>
+      <button onclick="backup()">Sauvegarder</button>
+      <input type="file" id="restoreFile" onchange="restore(event)" style="display:none"/>
+      <button onclick="document.getElementById('restoreFile').click()">Restaurer</button>
+    </nav>
+  </header>
+  <main>
+    <table id="samples">
+      <thead><tr><th>Code</th><th>Client</th><th>Produit</th><th>Service</th><th>Conclusion</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </main>
+  <footer>
+    <p class="muted">QC Lab Lite v2.3 (multi-fichiers)</p>
+  </footer>
+  <script src="app.js"></script>
 </body>
 </html>
