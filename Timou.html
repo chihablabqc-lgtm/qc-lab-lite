@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>QC Lab Lite v3.2</title>
+<style>
+:root{--bg:#f6f7f9;--ink:#111;--mut:#666;--bd:#dcdfe4;--acc:#0f172a;--ok:#eaffea;--nc:#ffecec;--chip:#eef2ff;--warn:#fff7e6}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--bd);z-index:10}
+.container{max-width:1180px;margin:0 auto;padding:10px}
+.btn{padding:8px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;cursor:pointer}
+.btn-primary{background:var(--acc);color:#fff;border:none}
+.btn-danger{background:#c62828;color:#fff;border:none}
+.btn-ghost{background:transparent;border:1px dashed #cbd5e1}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px}
+.grid{display:grid;gap:10px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.input,select,textarea{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+table{width:100%;border-collapse:collapse}th,td{padding:8px;border-top:1px solid #e5e7eb;text-align:left;font-size:14px}
+th{background:#f8fafc}.muted{color:#666;font-size:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:50}
+.modal{background:#fff;border-radius:14px;border:1px solid var(--bd);max-width:1120px;width:95vw;max-height:90vh;overflow:auto;padding:12px}
+.logoBox{border:1px solid var(--bd);border-radius:10px;min-height:70px;min-width:220px;display:flex;align-items:center;justify-content:center;background:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
+.chip{background:var(--chip);border:1px solid #c7d2fe;border-radius:999px;padding:2px 8px;font-size:12px}
+.okbg{background:var(--ok)}.ncbg{background:var(--nc)}.warnbg{background:var(--warn)}
+.tbl{border:1px solid var(--bd);border-radius:10px;overflow:auto}
+.tbl table th, .tbl table td{white-space:nowrap}
+.param-ok{background:var(--ok)}.param-bad{background:var(--nc)}
+@media print{header,.no-print{display:none!important}body{background:#fff}.card{border:none;padding:0}th,td{border:1px solid #000}th{background:#fff}}
+</style>
+</head>
+<body>
+<header>
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img id="labLogoSmall" style="max-height:40px;max-width:180px;display:none"/>
+      <div>
+        <div id="labNameHdr" style="font-weight:700">QC Lab Lite</div>
+        <div id="labMetaHdr" class="muted"></div>
+      </div>
+    </div>
+    <div class="no-print" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="btnLang">FR</button>
+      <button class="btn" id="btnClients">Clients</button>
+      <button class="btn" id="btnCatalog">Catalogue</button>
+      <button class="btn" id="btnSettings">Identité labo</button>
+      <button class="btn" id="btnExport">Exporter CSV</button>
+      <button class="btn" id="btnBackup">Sauvegarder</button>
+      <button class="btn" id="btnRestore">Restaurer</button>
+      <button class="btn btn-primary" id="btnNew">+ Nouvel échantillon</button>
+    </div>
+  </div>
+</header>
+
+<main class="container grid" style="gap:12px">
+  <div class="grid g3">
+    <div class="card"><div class="muted" data-i="stats.samples">Échantillons</div><div id="statTotal" style="font-weight:700">0</div></div>
+    <div class="card"><div class="muted" data-i="stats.soon">Échéance ≤48h</div><div id="statSoon" style="font-weight:700">0</div></div>
+    <div class="card"><div class="muted" data-i="stats.year">Année courante</div><div id="statYear" style="font-weight:700">0</div></div>
+  </div>
+
+  <div class="grid g3">
+    <div><div class="muted" data-i="search">Recherche</div><input class="input" id="q" placeholder="Code, client, produit, service"/></div>
+    <div><div class="muted" data-i="service">Service</div><select class="input" id="fService"><option data-i="all">Tous</option><option>Physico-chimie</option><option>Microbiologie</option></select></div>
+    <div><div class="muted" data-i="priority">Priorité</div><select class="input" id="fPriority"><option data-i="allf">Toutes</option><option>Normale</option><option>Urgente</option><option>Critique</option></select></div>
+  </div>
+
+  <div class="card tbl" style="padding:0">
+    <table>
+      <thead><tr>
+        <th data-i="code">Code</th><th data-i="intcode">Code interne</th><th data-i="client">Client</th><th data-i="prodsvc">Produit/Service</th>
+        <th data-i="sampler">Préleveur</th><th data-i="recv">Réception</th>
+        <th data-i="mfg">Fabrication</th><th data-i="exp">Expiration</th>
+        <th data-i="due">Échéance</th><th data-i="prio">Priorité</th><th class="no-print" style="text-align:right" data-i="actions">Actions</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ÉCHANTILLON -->
+<div class="modal-bg" id="mSample"><div class="modal">
+  <div class="row"><div style="font-weight:600" id="mSampleTitle" data-i="newsample">Nouvel échantillon</div><button class="btn no-print" onclick="closeM('mSample')">✕</button></div>
+  <form id="sampleForm">
+    <div class="grid g3">
+      <div><div class="muted" data-i="code">Code</div><input class="input" id="s_code" placeholder="auto PH/MC" readonly/></div>
+      <div><div class="muted" data-i="intcode">Code interne</div><input class="input" id="s_intcode" placeholder="auto INT/AAAA" readonly/></div>
+      <div><div class="muted" data-i="client">Client</div><div style="display:flex;gap:6px"><select class="input" id="s_client"></select><button type="button" class="btn" onclick="openM('mClients')" data-i="new">Nouveau</button></div></div>
+
+      <div><div class="muted" data-i="clientaddr">Adresse client</div><input class="input" id="s_clientAddr"/></div>
+      <div><div class="muted" data-i="product">Produit</div><select class="input" id="s_product"></select></div>
+      <div><div class="muted" data-i="service">Service</div><select class="input" id="s_service"><option value="">—</option><option>Physico-chimie</option><option>Microbiologie</option></select></div>
+
+      <div><div class="muted" data-i="brand">Nom commercial</div><input class="input" id="s_brand"/></div>
+      <div><div class="muted" data-i="qty">Poids / Qté</div><input class="input" id="s_qty"/></div>
+      <div><div class="muted" data-i="temp">Température (°C)</div><input class="input" id="s_temp"/></div>
+
+      <div><div class="muted" data-i="loc">Lieu prélèvement</div><input class="input" id="s_loc"/></div>
+      <div><div class="muted" data-i="sampler">Préleveur</div><select class="input" id="s_sampler"><option data-i="client">Client</option><option data-i="labtech">Technicien labo</option></select></div>
+      <div><div class="muted" data-i="recv">Réception</div><input type="date" class="input" id="s_recv"/></div>
+
+      <div><div class="muted">Heure réception</div><input type="time" class="input" id="s_recvTime"/></div>
+      <div><div class="muted" data-i="mfg">Fabrication (opt.)</div><input type="date" class="input" id="s_mfg"/></div>
+      <div><div class="muted" data-i="exp">Expiration (opt.)</div><input type="date" class="input" id="s_exp"/></div>
+
+      <div><div class="muted" data-i="due">Échéance</div><input type="date" class="input" id="s_due"/></div>
+      <div><div class="muted" data-i="priority">Priorité</div><select class="input" id="s_priority"><option>Normale</option><option>Urgente</option><option>Critique</option></select></div>
+      <div style="grid-column:1/span 3"><div class="muted" data-i="notes">Notes</div><textarea class="input" rows="2" id="s_notes"></textarea></div>
+    </div>
+
+    <div class="row" style="margin-top:8px"><div style="font-weight:600" data-i="tests">Tests</div>
+      <div class="no-print" style="display:flex;gap:6px">
+        <button type="button" class="btn" onclick="addTest()" data-i="addtest">+ Test</button>
+        <button type="button" class="btn" onclick="loadParams()" data-i="loadparams">Charger paramètres</button>
+      </div>
+    </div>
+    <div id="testsZone" class="grid" style="margin-top:6px"></div>
+
+    <div class="row no-print" style="justify-content:flex-end;margin-top:10px">
+      <button type="button" class="btn" onclick="closeM('mSample')" data-i="cancel">Annuler</button>
+      <button class="btn btn-primary" type="submit" data-i="save">Enregistrer</button>
+    </div>
+  </form>
+</div></div>
+
+<!-- RAPPORT -->
+<div class="modal-bg" id="mReport"><div class="modal">
+  <div class="row"><div style="font-weight:600" data-i="report">Rapport</div>
+    <div class="no-print" style="display:flex;gap:6px">
+      <button class="btn" onclick="window.print()" data-i="printpdf">Imprimer / PDF</button>
+      <button class="btn" onclick="exportWord()" data-i="exportword">Exporter Word</button>
+      <button class="btn" onclick="openM('mValidator')" id="btnValData">Données validateur</button>
+      <button class="btn btn-primary" id="btnValidate" onclick="validateReport()" data-i="validate">Valider rapport</button>
+      <button class="btn btn-danger" id="btnUnvalidate" onclick="unvalidateReport()" style="display:none" data-i="unvalidate">Annuler validation</button>
+      <button class="btn" onclick="closeM('mReport')">✕</button>
+    </div>
+  </div>
+
+  <div id="printable">
+    <div class="card" style="border:2px solid #111">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <img id="labLogo" style="max-height:80px;max-width:260px;display:none"/>
+          <div>
+            <div id="labName" style="font-weight:700;font-size:18px">Laboratoire Contrôle Qualité</div>
+            <div id="labMeta" class="muted"></div>
+            <div id="labAuth" class="muted"></div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="muted" data-i="ref">Réf. rapport</div><div id="repRef" style="font-weight:600"></div>
+          <div class="muted" data-i="intcode">Code interne</div><div id="repIntRef" style="font-weight:600"></div>
+          <div id="repDate" class="muted"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:6px" data-i="ident">Identification de l'échantillon</div>
+      <div class="grid g3" id="repIdent"></div>
+    </div>
+
+    <div class="card" id="repResults"></div>
+    <div class="card" id="repLawRef" style="display:none"></div>
+    <div class="card" id="repConclusion"></div>
+    <div class="card" id="repNotes" style="display:none"></div>
+
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:6px" data-i="validation">Validation</div>
+      <div class="grid g2">
+        <div><table><tbody>
+          <tr><td data-i="validatedby">Validé par</td><td id="vBy">—</td></tr>
+          <tr><td data-i="role">Fonction</td><td id="vRole">—</td></tr>
+          <tr><td data-i="date">Date</td><td id="vDate">—</td></tr>
+          <tr><td>Commentaire</td><td id="vComment">—</td></tr>
+        </tbody></table></div>
+        <div style="border:1px dashed #aaa;border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center" class="muted" data-i="stamp">Cachet & signature</div>
+      </div>
+      <div class="muted" style="margin-top:6px" data-i="iso">Rapport conforme ISO/CEI 17025. Reproduction interdite sauf accord écrit.</div>
+    </div>
+  </div>
+</div></div>
+
+<!-- IDENTITÉ -->
+<div class="modal-bg" id="mSettings"><div class="modal">
+  <div class="row"><div style="font-weight:600" data-i="labid">Identité du laboratoire</div><button class="btn no-print" onclick="closeM('mSettings')">✕</button></div>
+  <div class="grid g2">
+    <div><div class="muted" data-i="labname">Nom</div><input class="input" id="st_name" value="Laboratoire Contrôle Qualité"/></div>
+    <div><div class="muted" data-i="authnum">N° autorisation ministérielle</div><input class="input" id="st_auth"/></div>
+    <div><div class="muted" data-i="address">Adresse</div><input class="input" id="st_addr"/></div>
+    <div><div class="muted" data-i="phone">Téléphone</div><input class="input" id="st_phone"/></div>
+    <div style="grid-column:1/span 2"><div class="muted">Email</div><input class="input" id="st_email"/></div>
+  </div>
+  <div class="muted" style="margin-top:6px" data-i="logo">Logo (PNG/JPG/SVG)</div><input type="file" id="st_logo" accept="image/*"/>
+  <div class="logoBox" style="margin-top:6px"><img id="st_logoPrev" style="max-height:80px;max-width:260px;display:none"/></div>
+  <div class="row no-print" style="justify-content:flex-end"><button class="btn" onclick="saveSettings()" data-i="save">Enregistrer</button></div>
+</div></div>
+
+<!-- CLIENTS -->
+<div class="modal-bg" id="mClients"><div class="modal">
+  <div class="row"><div style="font-weight:600" data-i="clients">Clients</div><button class="btn no-print" onclick="closeM('mClients')">✕</button></div>
+  <div class="grid g3">
+    <div><div class="muted" data-i="name">Nom *</div><input class="input" id="cl_name"/></div>
+    <div><div class="muted" data-i="address">Adresse</div><input class="input" id="cl_addr"/></div>
+    <div><div class="muted" data-i="phone">Téléphone</div><input class="input" id="cl_phone"/></div>
+    <div style="grid-column:1/span 3"><div class="muted">Email</div><input class="input" id="cl_email"/></div>
+  </div>
+  <div class="row no-print" style="justify-content:flex-end;gap:6px">
+    <button class="btn" onclick="saveClient()" data-i="save">Enregistrer</button>
+    <button class="btn" id="btnCancelClientEdit" style="display:none" onclick="cancelClientEdit()" data-i="canceledit">Annuler édition</button>
+  </div>
+  <div id="clientsList" style="margin-top:8px"></div>
+</div></div>
+
+<!-- CATALOGUE PRODUITS -->
+<div class="modal-bg" id="mCatalog"><div class="modal">
+  <div class="row"><div style="font-weight:600">Catalogue produits & paramètres</div><button class="btn no-print" onclick="closeM('mCatalog')">✕</button></div>
+
+  <div class="grid g2">
+    <!-- Liste produits -->
+    <div class="card">
+      <div class="row"><div style="font-weight:600">Produits</div>
+        <div><button class="btn" onclick="newProduct()">+ Produit</button></div>
+      </div>
+      <div id="prodList" class="tbl" style="max-height:260px;overflow:auto"></div>
+      <div class="grid g2" style="margin-top:8px">
+        <div><div class="muted">Nom produit *</div><input class="input" id="cat_p_name"/></div>
+        <div><div class="muted">Réf. législative</div><input class="input" id="cat_p_law"/></div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><button class="btn" onclick="saveProduct()">Enregistrer produit</button></div>
+    </div>
+
+    <!-- Services & paramètres -->
+    <div class="card">
+      <div class="row"><div style="font-weight:600">Services & paramètres</div>
+        <div style="display:flex;gap:6px">
+          <select class="input" id="cat_service_sel" style="min-width:220px"></select>
+          <button class="btn" onclick="addService()">+ Service</button>
+          <button class="btn" onclick="delService()">Supprimer service</button>
+        </div>
+      </div>
+      <div class="tbl" style="max-height:240px;overflow:auto">
+        <table id="cat_params_tbl">
+          <thead><tr><th>Paramètre</th><th>Unité</th><th>Méthode/Norme</th><th>Limite</th><th>🔒</th><th></th></tr></thead>
+          <tbody id="cat_params_body"></tbody>
+        </table>
+      </div>
+      <div class="row" style="justify-content:flex-end;gap:6px">
+        <button class="btn" onclick="addCatalogParam()">+ Paramètre</button>
+        <button class="btn btn-primary" onclick="saveCatalog()">Enregistrer paramètres</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- VALIDATEUR -->
+<div class="modal-bg" id="mValidator"><div class="modal">
+  <div class="row"><div style="font-weight:600">Données du validateur</div><button class="btn no-print" onclick="closeM('mValidator')">✕</button></div>
+  <div class="grid g3">
+    <div><div class="muted">Nom & prénom *</div><input class="input" id="val_name"/></div>
+    <div><div class="muted">Fonction *</div><input class="input" id="val_role"/></div>
+    <div><div class="muted">Date *</div><input type="date" class="input" id="val_date"/></div>
+    <div style="grid-column:1/span 3"><div class="muted">Commentaire</div><textarea class="input" id="val_comment" rows="2" placeholder="Observations de validation"></textarea></div>
+  </div>
+  <div class="row" style="justify-content:flex-end"><button class="btn btn-primary" onclick="saveValidator()">Enregistrer</button></div>
+</div></div>
+
+<!-- RESTORE -->
+<div class="modal-bg" id="mRestore"><div class="modal">
+  <div class="row"><div style="font-weight:600" data-i="restore">Restaurer</div><button class="btn no-print" onclick="closeM('mRestore')">✕</button></div>
+  <div class="grid g2">
+    <div style="grid-column:1/span 2"><input type="file" id="restoreFile" accept=".json,.qclab,.qclab.json"/></div>
+    <div><div class="muted" data-i="mode">Mode</div><select class="input" id="restoreMode"><option value="replace" data-i="replace">Remplacer</option><option value="merge" data-i="merge">Fusionner</option></select></div>
+    <div id="restoreMsg" class="muted"></div>
+  </div>
+  <div class="row no-print" style="justify-content:flex-end"><button class="btn" onclick="doRestore()" data-i="restorebtn">Restaurer</button></div>
+</div></div>
+
+<footer class="muted" style="text-align:center;padding:10px">QC Lab Lite v3.2</footer>
+
+<script>
+/* ===================== i18n ===================== */
+let LANG = localStorage.getItem('qcl_lang') || 'fr';
+const TR = {
+  fr: {'stats.samples':'Échantillons','stats.soon':'Échéance ≤48h','stats.year':'Année courante',
+    search:'Recherche',service:'Service',priority:'Priorité',all:'Tous',allf:'Toutes',
+    code:'Code',intcode:'Code interne',client:'Client',prodsvc:'Produit/Service',sampler:'Préleveur',
+    recv:'Réception',due:'Échéance',prio:'Priorité',actions:'Actions',
+    newsample:'Nouvel échantillon',new:'Nouveau',clientaddr:'Adresse client',
+    product:'Produit',brand:'Nom commercial',qty:'Poids / Qté',temp:'Température (°C)',
+    loc:'Lieu prélèvement',labtech:'Technicien labo',notes:'Notes',
+    mfg:'Fabrication',exp:'Expiration',
+    tests:'Tests',addtest:'+ Test',cancel:'Annuler',save:'Enregistrer',
+    report:'Rapport',printpdf:'Imprimer / PDF',exportword:'Exporter Word',validate:'Valider rapport',unvalidate:'Annuler validation',
+    ref:'Réf. rapport',ident:"Identification de l'échantillon",validation:'Validation',
+    validatedby:'Validé par',role:'Fonction',date:'Date',stamp:'Cachet & signature',
+    iso:'Rapport conforme ISO/CEI 17025. Reproduction interdite sauf accord écrit.',
+    labid:'Identité du laboratoire',labname:'Nom',authnum:'N° autorisation ministérielle',address:'Adresse',phone:'Téléphone',logo:'Logo (PNG/JPG/SVG)',
+    clients:'Clients',canceledit:'Annuler édition',products:'Produits & services',param:'Paramètre',unit:'Unité',method:'Méthode/Norme',
+    limit:'Limite / Référence',lock:'Verrouiller norme',law:'Réf. législative (produit)',addsvc:'Ajouter service',addparam:'Ajouter paramètre',locknote:'Les normes verrouillées seront en lecture seule dans les rapports.',
+    restore:'Restaurer',mode:'Mode',replace:'Remplacer',merge:'Fusionner',restorebtn:'Restaurer',lawref:'Référence législative'
+  },
+  ar: {'stats.samples':'العينات','stats.soon':'الآجال ≤ ٤٨ ساعة','stats.year':'سنة جارية',
+    search:'بحث',service:'الخدمة',priority:'الأولوية',all:'الكل',allf:'الكل',
+    code:'المرجع',intcode:'الرمز الداخلي',client:'الزبون',prodsvc:'المنتج/الخدمة',sampler:'الآخذ',recv:'الاستقبال',due:'الأجل',p
